@@ -13,6 +13,12 @@ every installed theme, but the others have not been checked page by page yet.
 **Status: experimental.** It covers the pages I use daily, but the GUI has several hundred
 pages and I have not been through all of them. Reports of pages that look wrong are welcome.
 
+![Settings page in Arabic, right to left](docs/gui-settings-ar.png)
+
+| A table page | A dialog |
+| --- | --- |
+| ![Table](docs/gui-schedules-ar.png) | ![Dialog](docs/gui-dialog-ar.png) |
+
 ## What it changes
 
 1. **The page templates** (`default.volt`, `head.inc` and the login page in `authgui.inc`) get

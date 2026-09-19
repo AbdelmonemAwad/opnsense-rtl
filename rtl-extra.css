@@ -1,0 +1,43 @@
+/* Copyright (C) 2026 Abdelmonem Awad <eg2@live.com>. BSD 2-Clause License, see LICENSE. */
+
+/* inline styles in the page templates are not part of the stylesheets, mirror them here */
+html[dir=rtl] .menu-level-3-item {
+  padding-left: 15px !important;
+  padding-right: 54px !important;
+}
+
+/* menu: the icon cell of second level items carries an inline text-align:right,
+   which in rtl pulls the icon against the text instead of the far edge */
+html[dir=rtl] #mainmenu div[style*="table-cell"][style*="text-align:right"] {
+  text-align: left !important;
+}
+
+/* charts draw their own text (chart.js canvas, d3/nvd3 svg); keep them left to right,
+   otherwise labels, legends and gauge values are placed mirrored and get clipped */
+html[dir=rtl] canvas,
+html[dir=rtl] svg {
+  direction: ltr;
+}
+
+/* arrows that point "forward" in the menu and in breadcrumbs */
+html[dir=rtl] .page-side .fa-chevron-right,
+html[dir=rtl] .page-side .fa-angle-right,
+html[dir=rtl] .page-side .fa-caret-right,
+html[dir=rtl] .fa-arrow-right.flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* technical values read left to right inside right-to-left text */
+html[dir=rtl] input[type=text],
+html[dir=rtl] input[type=number],
+html[dir=rtl] input[type=password],
+html[dir=rtl] textarea,
+html[dir=rtl] pre,
+html[dir=rtl] code {
+  unicode-bidi: plaintext;
+}
+html[dir=rtl] pre,
+html[dir=rtl] code {
+  direction: ltr;
+  text-align: left;
+}

@@ -1,10 +1,9 @@
 name: checks
 
-# A translation is a pair of files that have to agree with each other and with the
-# program they are for. The two ways this repository can be wrong without anybody
-# noticing are a catalogue that gettext will refuse to load, and a compiled .mo that
-# no longer matches the .po beside it - which means the file people install is not the
-# file people review.
+# This repository rewrites a stylesheet and installs it, so what can go wrong is a
+# script that does not parse, a stylesheet with an unbalanced rule, or a rule written
+# with `!important` where the cascade would have done - which is how an override sheet
+# becomes impossible to override in turn.
 
 on:
   push:
@@ -16,39 +15,51 @@ permissions:
   contents: read
 
 jobs:
-  catalogue:
-    name: catalogue
+  syntax:
+    name: syntax
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: gettext
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq gettext
-
-      - name: The .po is valid and its placeholders match
-        # -c is the strict set: it checks the header, and it checks that the format
-        # placeholders in each translation match the ones in the string it translates.
-        # A %s dropped in translation is a crash in the program, not a typo.
-        run: msgfmt -c --statistics -o /dev/null ar_SA.po
-
-      - name: The compiled .mo is the one this .po produces
+      - name: Python
         run: |
-          [ -f OPNsense.mo ] || { echo "nothing compiled here"; exit 0; }
-          msgfmt -o /tmp/rebuilt.mo ar_SA.po
-          # msgfmt output is deterministic for the same input and the same version, so a
-          # difference means the .mo was built from something other than this .po.
-          if ! cmp -s /tmp/rebuilt.mo OPNsense.mo; then
-            echo "OPNsense.mo does not match ar_SA.po - rebuild it with:"
-            echo "    msgfmt -o OPNsense.mo ar_SA.po"
-            msgunfmt OPNsense.mo | msgcmp - ar_SA.po || true
-            exit 1
-          fi
-          echo "the compiled catalogue matches its source"
+          shopt -s globstar nullglob
+          files=(*.py tools/**/*.py)
+          [ ${#files[@]} -gt 0 ] || { echo "no Python here"; exit 0; }
+          python3 -m compileall -q "${files[@]}"
+          python3 -m pip install --quiet pyflakes
+          python3 -m pyflakes "${files[@]}"
 
-      - name: Nothing left untranslated without saying so
+      - name: Shell
         run: |
-          total=$(msgfmt --statistics -o /dev/null ar_SA.po 2>&1 || true)
-          echo "$total"
+          for f in *.sh 61-opnsense-rtl; do
+            [ -f "$f" ] || continue
+            sh -n "$f" && echo "ok $f"
+          done
+
+      - name: Stylesheet
+        run: |
+          shopt -s nullglob
+          for f in *.css; do
+            python3 - "$f" <<'PY'
+          import re
+          import sys
+
+          path = sys.argv[1]
+          text = open(path, encoding='utf-8').read()
+          # Comments first: a brace inside one is not a brace.
+          stripped = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
+          opened, closed = stripped.count('{'), stripped.count('}')
+          if opened != closed:
+              print('%s: %d "{" against %d "}" - an unclosed rule takes every rule after '
+                    'it with it' % (path, opened, closed))
+              sys.exit(1)
+          if '/*' in text and text.count('/*') != text.count('*/'):
+              print('%s: an unterminated comment swallows the rest of the file' % path)
+              sys.exit(1)
+          print('%s: %d rules, balanced' % (path, opened))
+          PY
+          done
 
   privacy:
     name: nothing private

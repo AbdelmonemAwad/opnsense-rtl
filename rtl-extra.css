@@ -41,3 +41,14 @@ html[dir=rtl] code {
   direction: ltr;
   text-align: left;
 }
+
+/* Dropdowns that JavaScript positions itself.
+   bootstrap-select appends its menu to <body> inside .bs-container and sets
+   inline left/width from the button's offset; bootstrap-datepicker does the
+   same. The automatic left->right mirroring adds right:0, and with left, right
+   and width all set the RTL box model keeps `right`, so the menu jumps to the
+   window edge - far away from the control it belongs to. Keep the JS value. */
+html[dir=rtl] .bs-container,
+html[dir=rtl] .datepicker-dropdown {
+  right: auto !important;
+}

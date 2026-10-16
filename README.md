@@ -54,9 +54,17 @@ The installer keeps pristine copies of the three templates in `/root/opnsense-rt
 before changing them, and checks that each patched template still compiles. If one does not,
 it puts the original back and stops.
 
-Core updates replace the templates and stylesheets. A boot hook
-(`/usr/local/etc/rc.syshook.d/start/61-opnsense-rtl`) applies the changes again. To apply them
-right after an update without rebooting, run:
+Core updates replace the templates and stylesheets. Two things apply the changes again, so
+nothing has to be run by hand after an update:
+
+- a **pkg trigger**, `/usr/local/share/pkg/triggers/opnsense-rtl.ucl`, which pkg runs the moment a
+  package writes one of the three templates or a stylesheet. An update that only installs packages
+  does not reboot, so this is the part that keeps the layout right straight after one. It does not
+  restart the web GUI; the update does that itself when pkg is done;
+- a **boot hook**, `/usr/local/etc/rc.syshook.d/start/61-opnsense-rtl`, which does the same at every
+  boot.
+
+To apply them by hand:
 
 ```sh
 python3 /root/opnsense-rtl/apply_rtl.py
@@ -68,8 +76,8 @@ python3 /root/opnsense-rtl/apply_rtl.py
 sh /tmp/opnsense-rtl-main/uninstall.sh
 ```
 
-This restores the original templates, deletes the mirrored stylesheets and removes the boot
-hook.
+This removes the pkg trigger, restores the original templates, deletes the mirrored stylesheets
+and removes the boot hook.
 
 ## Towards upstream
 
@@ -77,6 +85,14 @@ Patching installed files is a stopgap. The proper place for this is OPNsense its
 direction attribute in the templates, and the mirrored stylesheets generated when the themes
 are built, instead of on the firewall. I intend to propose it there once it has been used for
 a while; this repository is the testing ground.
+
+## In the XGS image
+
+[xgs-image-builder](https://github.com/AbdelmonemAwad/xgs-image-builder) builds an OPNsense image
+for Sophos XGS appliances with this repository in it, installed at the image's first boot. It holds
+no copy of this repository: every build takes `main` as it is that day, so a change merged here is
+in the next image without anything being done there. What the image calls here - `install.sh` - is checked
+from that side every day, so moving or renaming one of them is caught there; keep them where they are.
 
 ## License
 

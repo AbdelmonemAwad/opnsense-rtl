@@ -3,12 +3,14 @@
 """
 Right-to-left layout for the OPNsense GUI when the language is Arabic or Persian.
 
-  apply_rtl.py            patch the page templates and build the mirrored stylesheets
-  apply_rtl.py --remove   put the original templates back and delete the mirrored stylesheets
+  apply_rtl.py                patch the page templates and build the mirrored stylesheets
+  apply_rtl.py --no-restart   the same, without restarting the web GUI (the pkg trigger)
+  apply_rtl.py --remove       put the original templates back and delete the mirrored stylesheets
 
 The first run keeps pristine copies of the templates in /root/opnsense-rtl/backup. Core
-updates replace the templates, so this runs again at boot (rc.syshook.d/start/61-opnsense-rtl);
-it only changes what is not patched yet.
+updates replace the templates, so this runs again when pkg writes one of them
+(/usr/local/share/pkg/triggers/opnsense-rtl.ucl) and at every boot
+(rc.syshook.d/start/61-opnsense-rtl); it only changes what is not patched yet.
 """
 import glob
 import os
@@ -106,13 +108,14 @@ def lint(path):
         subprocess.run(['php', '-r', code], check=True, capture_output=True)
 
 
-def clear_caches():
+def clear_caches(restart=True):
     for path in glob.glob('/usr/local/opnsense/mvc/app/cache/*.php'):
         os.unlink(path)
-    subprocess.run('configctl webgui restart', shell=True, capture_output=True)
+    if restart:
+        subprocess.run('configctl webgui restart', shell=True, capture_output=True)
 
 
-def apply():
+def apply(restart=True):
     os.makedirs(BACKUP, exist_ok=True)
     changed = False
     for path, patch in ((VOLT, patch_volt), (HEAD, patch_head), (AUTH, patch_auth)):
@@ -128,7 +131,7 @@ def apply():
             changed = True
     subprocess.run([sys.executable, os.path.join(HERE, 'make_rtl_css.py')], check=True)
     if changed:
-        clear_caches()
+        clear_caches(restart)
     print('right-to-left layout active for Arabic and Persian' + (' (templates patched)' if changed else ''))
 
 
@@ -145,4 +148,4 @@ def remove():
 
 
 if __name__ == '__main__':
-    remove() if '--remove' in sys.argv else apply()
+    remove() if '--remove' in sys.argv else apply(restart='--no-restart' not in sys.argv)

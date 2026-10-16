@@ -1,0 +1,28 @@
+# Copyright (C) 2026 Abdelmonem Awad <eg2@live.com>. BSD 2-Clause License, see LICENSE.
+#
+# pkg runs this when a package it installs or upgrades writes into the directories of the three
+# templates this project patches, or of the stylesheets it mirrors - the opnsense package and the
+# theme packages do on an update. An update that only installs packages does not reboot, so without
+# this the GUI would stay left to right, and the mirrored stylesheets would be stale, until the
+# next boot.
+#
+# pkg matches a trigger against the DIRECTORIES a package writes into, not against its files -
+# measured: a trigger naming a file never ran, the same trigger naming its directory did. So this
+# runs whenever any package writes into one of them; apply_rtl.py patches only what is unpatched
+# and mirrors the stylesheets again, which is what an update needs.
+#
+# --no-restart: the update restarts the web GUI itself once pkg is done, and restarting it in the
+# middle of the transaction would cut the firmware page off from the update it is showing.
+path: [
+	"/usr/local/opnsense/mvc/app/views/layouts",
+	"/usr/local/www",
+	"/usr/local/opnsense/www/css"
+]
+path_glob: [ "/usr/local/opnsense/www/themes/*/build/css" ]
+trigger: {
+	type: lua
+	sandbox: false
+	script: <<EOS
+pkg.exec({"/bin/sh", "-c", "[ -f /root/opnsense-rtl/apply_rtl.py ] && /usr/local/bin/python3 /root/opnsense-rtl/apply_rtl.py --no-restart > /dev/null; exit 0"})
+EOS
+}

@@ -32,11 +32,24 @@ pages and I have not been through all of them. Reports of pages that look wrong 
    - `border-radius` corners,
    - horizontal `translate()` values and resize cursors.
 
-   Icon fonts are not mirrored.
+   Icon fonts are not mirrored, and neither is a rule whose selector already names a direction
+   (`.tabulator-rtl`, `.tabulator-ltr`, `[dir=...]`, `:dir()`): it belongs to a component that
+   lays itself out right to left on its own. Mirrored, Tabulator's said `direction: ltr` for its
+   right-to-left mode, and every table OPNsense builds with it ran left to right in an Arabic page
+   until 2026-10-19 ([#9](https://github.com/AbdelmonemAwad/opnsense-rtl/issues/9)).
 3. **A few manual rules** in `rtl-extra.css` for things the automatic pass cannot fix:
    - inline styles in the templates,
    - chart text (canvas and SVG), which has to stay left to right,
    - fields that hold addresses and commands.
+4. **The column titles a browser kept.** OPNsense's tables keep their columns in the browser,
+   titles included, and put them back over the titles the page was rendered with - so a table seen
+   before the language changed kept its old titles. A short script in the template's head forgets
+   the kept titles, and only the titles, whenever the page's language is not the one they were kept
+   under; widths and the columns shown stay. It runs in every language, not only a right-to-left one
+   ([opnsense-arabic#9](https://github.com/AbdelmonemAwad/opnsense-arabic/issues/9)).
+
+An appliance patched by an older version is patched again from the original templates it kept: the
+mark in the template carries a version.
 
 ## Installation
 

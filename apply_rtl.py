@@ -25,11 +25,39 @@ VOLT = '/usr/local/opnsense/mvc/app/views/layouts/default.volt'
 HEAD = '/usr/local/www/head.inc'
 AUTH = '/usr/local/www/authgui.inc'     # login and error pages
 MARK = 'opnsense-rtl'
+# Raised whenever VOLT_PATCHES change, so a template patched by an older version is patched again,
+# from the original kept in BACKUP, instead of being left as it was because it carries MARK.
+VOLT_MARK = 'opnsense-rtl 2'
+
+# A table OPNsense builds (UIBootgrid on Tabulator) keeps its columns in this browser's
+# localStorage, under tabulator-<page>#<table>-columns, their titles included, and puts them back
+# over the titles the page was rendered with. Once the interface language changes, every table
+# a browser had shown before would keep its old titles (opnsense-arabic#9). This forgets the
+# titles - and only the titles: widths, order and the columns shown stay - whenever the page's
+# language is not the one they were kept under. It runs in <head>, before any table is built, in
+# every language, not only in a right-to-left one.
+TITLES_SCRIPT = (
+    '{# opnsense-rtl: forget the column titles kept in another language #}'
+    '<script>(function () { try {'
+    " var lang = document.documentElement.lang || '', seen = 'opnsense-rtl-columns-lang';"
+    ' if (localStorage.getItem(seen) === lang) { return; }'
+    ' for (var i = 0; i < localStorage.length; i++) {'
+    ' var key = localStorage.key(i);'
+    " if (!key || key.indexOf('tabulator-') !== 0 || !/-columns$/.test(key)) { continue; }"
+    ' var columns = JSON.parse(localStorage.getItem(key));'
+    ' if (!Array.isArray(columns)) { continue; }'
+    ' (function strip(list) { list.forEach(function (c) { if (c && typeof c === "object") {'
+    ' delete c.title; if (Array.isArray(c.columns)) { strip(c.columns); } } }); })(columns);'
+    ' localStorage.setItem(key, JSON.stringify(columns));'
+    ' }'
+    ' localStorage.setItem(seen, lang);'
+    ' } catch (e) {} })();</script>'
+)
 
 VOLT_PATCHES = [
     # direction on the root element
     ('<html lang="{{ langcode|safe }}" class="no-js">',
-     "{# opnsense-rtl #}{% set rtl_ui = langcode|slice(0, 1) in ['ar', 'fa'] %}"
+     "{# opnsense-rtl 2 #}{% set rtl_ui = langcode|slice(0, 1) in ['ar', 'fa'] %}"
      '<html lang="{{ langcode|safe }}"{% if rtl_ui %} dir="rtl"{% endif %} class="no-js">'),
     # mirrored stylesheets (icon fonts stay as they are); note: volt slice() end index is inclusive
     ('<link href="{{ cache_safe(theme_file_or_default(filename, theme_name)) }}" rel="stylesheet">',
@@ -37,6 +65,8 @@ VOLT_PATCHES = [
      "{% if rtl_ui and css_path|slice(0, 10) != '/ui/assets/' and css_path|slice(-4) == '.css' %}"
      "{% set css_path = css_path|slice(0, css_path|length - 5) ~ '.rtl.css' %}{% endif %}"
      '<link href="{{ cache_safe(css_path) }}" rel="stylesheet">'),
+    # the column titles a browser kept in another language
+    ('<meta charset="UTF-8" />', '<meta charset="UTF-8" />' + TITLES_SCRIPT),
 ]
 
 HEAD_FUNCS = '''
@@ -61,8 +91,14 @@ if (!function_exists('rtl_ui')) {
 
 def patch_volt():
     text = open(VOLT, encoding='utf-8').read()
-    if MARK in text:
+    if VOLT_MARK in text:
         return False
+    if MARK in text:
+        # patched by an older version: start again from the original
+        pristine = os.path.join(BACKUP, os.path.basename(VOLT))
+        if not os.path.exists(pristine):
+            raise RuntimeError(f'{VOLT}: patched by an older version and no original kept in {BACKUP}')
+        text = open(pristine, encoding='utf-8').read()
     for old, new in VOLT_PATCHES:
         if old not in text:
             raise RuntimeError(f'{VOLT}: expected markup not found, template changed upstream: {old[:60]}')

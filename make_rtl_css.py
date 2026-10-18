@@ -129,6 +129,14 @@ def flip_block(body):
     return ';'.join(flip_decl(d) if d.strip() else d for d in split_top(body, ';'))
 
 
+# A rule whose selector names a direction - Tabulator's .tabulator-rtl and .tabulator-ltr, a
+# [dir=rtl] or :dir(rtl) - belongs to a component that lays itself out right to left on its own and
+# was written for that direction already. Mirrored, it turns against the component: the copy of
+# Tabulator's stylesheet said .tabulator.tabulator-rtl { direction: ltr }, and every table built by
+# UIBootgrid ran left to right in an Arabic page (opnsense-rtl#9). Such a rule is copied as it is.
+OWN_DIRECTION = re.compile(r'(?i)(?<![\w-])(?:[\w-]+-)?(?:rtl|ltr)(?![\w-])|\[dir\b|:dir\(')
+
+
 def flip_css(css):
     out, i, n = [], 0, len(css)
     stack = []            # block kinds: 'rules' or 'decls'
@@ -164,7 +172,7 @@ def flip_css(css):
                         break
                     j += 1
                 body = re.sub(r'/\*.*?\*/', '', css[i:j], flags=re.S)
-                out.append(flip_block(body))
+                out.append(body if OWN_DIRECTION.search(prelude) else flip_block(body))
                 out.append('}')
                 i = j + 1
             else:

@@ -19,7 +19,7 @@ jobs:
     name: syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Python
         run: |
@@ -65,7 +65,7 @@ jobs:
     name: nothing private
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: No real addresses, hardware identifiers or credentials
         run: python3 tools/check-private-data.py .
 

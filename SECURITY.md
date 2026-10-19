@@ -5,7 +5,7 @@
 **Not in a public issue, please.** Report it privately through GitHub -
 [**Report a vulnerability**](https://github.com/AbdelmonemAwad/opnsense-rtl/security/advisories/new),
 on the Security tab - where only you and the owner see it, and the fix can be prepared before anything is
-public. Without a GitHub account, write to **eg2@live.com**. Either way, include:
+public. Without a GitHub account, write to **security@npuforge.org**. Either way, include:
 
 - what is affected - the template patches, the generated stylesheets, the installer, the hooks and the self-update;
 - the version you installed and the OPNsense version;

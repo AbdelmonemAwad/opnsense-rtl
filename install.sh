@@ -1,4 +1,8 @@
 #!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 # Install the right-to-left layout on an OPNsense firewall. Run as root from a copy of this repository:
 #   sh install.sh
 # The files are kept in /root/opnsense-rtl and re-applied after core updates: by a pkg trigger the

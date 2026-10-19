@@ -1,4 +1,8 @@
 #!/bin/sh
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
 # Put the original page templates back and remove the mirrored stylesheets and the boot hook.
 
 # the self-update and the trigger first, so that nothing puts the layout back meanwhile

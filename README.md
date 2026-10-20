@@ -109,8 +109,9 @@ from that side every day, so moving or renaming one of them is caught there; kee
 
 ## Updates
 
-An installed copy follows this repository's **releases** by itself: once a day, at 03:13,
-`/root/opnsense-rtl/self-update.py` (from `/usr/local/etc/cron.d/opnsense-rtl-update`) asks GitHub for the latest release and, when it is ahead of what
+An installed copy is updated to this repository's **releases** by hand: from **XGS: Updates**, its *Plugins*
+tab ([os-xgs-npu](https://github.com/AbdelmonemAwad/os-xgs-npu)), or with `/root/opnsense-rtl/self-update.py`. ~~Once a day, at 03:13, from `/usr/local/etc/cron.d/opnsense-rtl-update`~~ - nothing
+is installed on its own since 2026-10-20, at the owner's word. It asks GitHub for the latest release and, when it is ahead of what
 is installed, downloads it and runs the `install.sh` it carries - the same script a hand install
 runs. A change merged on `main` reaches installed firewalls when it is released, not before; with
 no release published, nothing changes.

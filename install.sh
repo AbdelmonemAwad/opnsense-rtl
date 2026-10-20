@@ -7,8 +7,8 @@
 #   sh install.sh
 # The files are kept in /root/opnsense-rtl and re-applied after core updates: by a pkg trigger the
 # moment an update writes a template or a stylesheet (an update that only installs packages does
-# not reboot), and by a boot hook at every boot. Each new release is taken by the daily self-update
-# (self-update.py, from cron).
+# not reboot), and by a boot hook at every boot. A new release is installed from XGS: Updates
+# (os-xgs-npu's Plugins tab), or by hand with self-update.py.
 
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -22,9 +22,12 @@ fi
 install -m 0755 "${HERE}/61-opnsense-rtl" /usr/local/etc/rc.syshook.d/start/61-opnsense-rtl
 mkdir -p /usr/local/share/pkg/triggers
 install -m 0644 "${HERE}/opnsense-rtl.ucl" /usr/local/share/pkg/triggers/opnsense-rtl.ucl
-install -m 0644 "${HERE}/opnsense-rtl.cron" /usr/local/etc/cron.d/opnsense-rtl-update
+# No daily self-update since 2026-10-20: a release is installed from XGS: Updates
+# (its Plugins tab, in os-xgs-npu) or by hand with self-update.py. An older
+# install's cron entry goes.
+rm -f /usr/local/etc/cron.d/opnsense-rtl-update
 
-# What this install is, for the daily self-update: the commit, from a git checkout, or from the
+# What this install is, for the self-update: the commit, from a git checkout, or from the
 # .source-commit stamp that an xgs-image-builder image or the self-update leaves in the tree.
 # Without either it is recorded as unknown, and the self-update takes the latest release once.
 REV=; RDATE=; RSRC=unknown

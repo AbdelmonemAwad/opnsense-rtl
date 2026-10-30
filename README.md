@@ -1,3 +1,18 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/readme/banner-light.svg">
+  <img src="docs/images/readme/banner-light.svg" alt="opnsense-rtl - The OPNsense layout mirrored for Arabic and Persian" width="100%">
+</picture>
+
+<p align="center">
+  <a href="https://github.com/AbdelmonemAwad/opnsense-rtl/releases/latest"><img alt="the newest release" src="https://img.shields.io/github/v/release/AbdelmonemAwad/opnsense-rtl?sort=semver&amp;style=flat-square&amp;label=release&amp;color=8250df"></a>
+  <a href="https://github.com/AbdelmonemAwad/opnsense-rtl/actions/workflows/checks.yml"><img alt="checks on main" src="https://img.shields.io/github/actions/workflow/status/AbdelmonemAwad/opnsense-rtl/checks.yml?branch=main&amp;style=flat-square&amp;label=checks"></a>
+  <a href="LICENSE"><img alt="licence: BSD-2-Clause" src="https://img.shields.io/badge/licence-BSD--2--Clause-blue.svg?style=flat-square"></a>
+  <a href="#right-to-left-layout-for-opnsense"><img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00.svg?style=flat-square"></a>
+  <a href="#right-to-left-layout-for-opnsense"><img alt="status: experimental, not every page of the GUI checked yet" src="https://img.shields.io/badge/status-experimental-orange.svg?style=flat-square"></a>
+  <a href="#in-the-xgs-image"><img alt="in the XGS image" src="https://img.shields.io/badge/XGS%20image-included-9a6700.svg?style=flat-square"></a>
+</p>
+
 # Right-to-left layout for OPNsense
 
 The OPNsense GUI can be translated into Arabic or Persian, but the page layout stays left to
@@ -13,11 +28,13 @@ every installed theme, but the others have not been checked page by page yet.
 **Status: experimental.** It covers the pages I use daily, but the GUI has several hundred
 pages and I have not been through all of them. Reports of pages that look wrong are welcome.
 
-![Settings page in Arabic, right to left](docs/gui-settings-ar.png)
+![Settings page in Arabic, right to left](docs/images/gui-settings-ar.png)
 
 | A table page | A dialog |
 | --- | --- |
-| ![Table](docs/gui-schedules-ar.png) | ![Dialog](docs/gui-dialog-ar.png) |
+| ![Table](docs/images/gui-schedules-ar.png) | ![Dialog](docs/images/gui-dialog-ar.png) |
+
+<p align="center"><b>Contents:</b> <a href="#what-it-changes">What it changes</a> &middot; <a href="#installation">Installation</a> &middot; <a href="#removing-it">Removing it</a> &middot; <a href="#towards-upstream">Towards upstream</a> &middot; <a href="#in-the-xgs-image">In the XGS image</a> &middot; <a href="#updates">Updates</a> &middot; <a href="#license">License</a></p>
 
 ## What it changes
 

@@ -11,4 +11,5 @@ rm -f /usr/local/share/pkg/triggers/opnsense-rtl.ucl
 python3 /root/opnsense-rtl/apply_rtl.py --remove
 rm -f /usr/local/etc/rc.syshook.d/start/61-opnsense-rtl
 rm -f /root/opnsense-rtl/self-update.py
+rm -rf /root/opnsense-rtl/release-keys
 rm -rf /usr/local/share/opnsense-rtl

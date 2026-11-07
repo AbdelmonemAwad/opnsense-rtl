@@ -127,24 +127,35 @@ from that side every day, so moving or renaming one of them is caught there; kee
 ## Updates
 
 An installed copy is updated to this repository's **releases** by hand: from **XGS: Updates**, its *Plugins*
-tab ([os-xgs-npu](https://github.com/AbdelmonemAwad/os-xgs-npu)), or with `/root/opnsense-rtl/self-update.py`. ~~Once a day, at 03:13, from `/usr/local/etc/cron.d/opnsense-rtl-update`~~ - nothing
-is installed on its own since 2026-10-20: an update runs when the appliance's owner starts it. It asks GitHub for the latest release and, when it is ahead of what
-is installed, downloads it and runs the `install.sh` it carries - the same script a hand install
-runs. A change merged on `main` reaches installed firewalls when it is released, not before; with
-no release published, nothing changes.
+tab ([os-xgs-npu](https://github.com/AbdelmonemAwad/os-xgs-npu)), or with `/root/opnsense-rtl/self-update.py`.
+Nothing is installed on its own since 2026-10-20: an update runs when the appliance's owner starts it. It reads the
+latest release's signed manifest and, when the release is ahead of what is installed, downloads the archive the
+manifest names and runs the `install.sh` it carries - the same script a hand install runs. A change merged on
+`main` reaches installed firewalls when it is released, not before; with no release published, nothing changes.
 
+- **Signed releases** (since 2026-11-07). A release is installed only as its owner signed it. It carries
+  `opnsense-rtl-<tag>.tar.gz`, the tag's tree made by `git archive`; `release.json`, the manifest - the tag, its
+  commit and date, the archive's SHA-256 and size; and `release.json.sig`, the manifest's Ed25519 signature, made by
+  the owner's private signing repository, never by this repository's CI. The public keys are installed in
+  `/root/opnsense-rtl/release-keys/`. A release whose signature does not verify with one of them, or whose archive is not the
+  one signed, is not installed, and a release not signed is not offered. GitHub's API and npuforge.org's copy of it
+  no longer choose what is installed, and the tag's commit is confirmed with GitHub before the download.
+- **Releasing.** A release is an annotated tag pushed on `main`, its message the release's notes:
+  `.github/workflows/release.yml` makes the release a draft and starts the signing, and the signing repository
+  publishes it once it is signed. A release made by hand with `gh release create` is published unsigned, can never
+  be signed afterwards - this repository's releases are immutable - and no firewall takes it.
 - **Only forward.** What is installed is recorded in `/usr/local/share/opnsense-rtl/installed.json` by
   the installer - the commit, from a git checkout or from the `.source-commit` stamp that an
   xgs-image-builder image or an update leaves in the tree. A firewall running something newer than
-  the release is not taken back; an install from before the stamp existed takes the latest release
-  once.
+  the release - by the date signed - is not taken back; an install from before the stamp existed takes the latest
+  release once.
 - **What happened** is in the system log as `self-update`, in
   `/usr/local/share/opnsense-rtl/update.json`, and the installer's output in `update.log` beside it.
 - `/root/opnsense-rtl/self-update.py check` says what it would do and changes nothing.
 
-Tested in a QEMU virtual machine against a stand-in for GitHub (no release had been published):
-a release ahead is installed, one that is not is left, no release and an unreachable GitHub change
-nothing, and the uninstaller removes the updater, its cron entry and the stamp.
+Tested by `tools/test-self-update.py`, which the checks run - releases made and signed in the test with
+throwaway keys: what is taken and refused, and what an update installs - and on an XGS 3300 through the
+*Plugins* tab: [the plugins' signed releases, measured](https://github.com/AbdelmonemAwad/os-xgs-npu/blob/main/docs/measurements/signed-plugin-releases-2026-11-07.md).
 
 ## License
 

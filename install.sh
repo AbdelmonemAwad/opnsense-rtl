@@ -18,6 +18,11 @@ mkdir -p "${DEST}"
 if [ "${HERE}" != "${DEST}" ]; then
     cp "${HERE}/apply_rtl.py" "${HERE}/make_rtl_css.py" "${HERE}/rtl-extra.css" "${DEST}/"
     install -m 0755 "${HERE}/self-update.py" "${DEST}/self-update.py"
+    # The public keys a release must be signed with for self-update.py to install it (its SIGNED
+    # RELEASES): the set this tree holds and no other - a key the tree dropped goes with this install.
+    rm -rf "${DEST}/release-keys"
+    install -d -m 0755 "${DEST}/release-keys"
+    install -m 0644 "${HERE}"/release-keys/*.pub "${DEST}/release-keys/"
 fi
 install -m 0755 "${HERE}/61-opnsense-rtl" /usr/local/etc/rc.syshook.d/start/61-opnsense-rtl
 mkdir -p /usr/local/share/pkg/triggers

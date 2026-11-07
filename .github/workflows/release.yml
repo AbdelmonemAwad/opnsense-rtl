@@ -1,0 +1,100 @@
+#-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright (c) 2026 Abdelmonem Awad <eg2@live.com>
+#
+name: release
+
+# How a tag becomes a release a firewall installs (since 2026-11-07). An annotated tag on main, its
+# message the release's notes, is pushed; this makes its release a draft and starts the owner's private
+# signing repository, which adds the tag's archive, its manifest and the manifest's signature to the
+# draft and publishes it. A firewall installs a release only as signed (SIGNED RELEASES in
+# self-update.py), so a release is not made by hand with `gh release create`: published unsigned, it
+# could not be signed afterwards - this repository's releases are immutable, and GitHub takes no file
+# into one once it is published - and no firewall would take it. A draft is seen by no firewall and no
+# visitor, so a release whose signing fails stays one.
+
+on:
+  push:
+    tags:
+      # Loose on purpose: GitHub's tag filters are not regular expressions. Anything beginning with v
+      # starts this, and the first step stops a tag that is not on main.
+      - 'v*'
+  # By hand: a tag whose release is not published yet - after a run that stopped before its draft was
+  # made or its signing started, say - made a draft and its signing started.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'A tag whose release is not published yet'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    name: a draft to sign
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # To make the draft. Nothing else is granted.
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: This repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          # The release's notes are read out of the annotated tag object, locally: a shallow
+          # checkout has nothing to read them from.
+          fetch-depth: 0
+
+      - name: The tag is on main
+        run: |
+          set -eu
+          git fetch --force --tags --quiet origin
+          git fetch --force --no-tags --quiet origin +refs/heads/main:refs/remotes/origin/main
+          SHA=$(git rev-parse "${TAG}^{commit}")
+          # A tag on a commit that never went through main would publish what the checks never saw.
+          if ! git merge-base --is-ancestor "${SHA}" origin/main; then
+            echo "${TAG} points at ${SHA}, which is not on main. Tag a commit that is."
+            exit 1
+          fi
+          if [ "$(git cat-file -t "${TAG}")" != "tag" ]; then
+            echo "NOTE: ${TAG} is a lightweight tag, so the release notes will be the commit message."
+          fi
+          echo "${TAG} is on main"
+
+      - name: Make the release a draft
+        env:
+          # The job token, with the contents:write granted above and nothing else.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          if gh release view "${TAG}" > /dev/null 2>&1; then
+            if [ "$(gh release view "${TAG}" --json isDraft --jq .isDraft)" != true ]; then
+              echo "${TAG} is published already, and only a draft is signed: tag the next version."
+              exit 1
+            fi
+            echo "${TAG} is a draft already"
+            exit 0
+          fi
+          gh release create "${TAG}" --verify-tag --notes-from-tag --title "${TAG}" --draft
+          echo "${TAG}: its release a draft, to be signed and published"
+
+      # The signing repository is another one, private, whose workflow this run's own token cannot
+      # start: SIGNING_DISPATCH_TOKEN is a fine-grained token with Actions read and write on it alone.
+      # Without it, that repository's own look every six hours finds the draft.
+      - name: Start the signing of the release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.SIGNING_DISPATCH_TOKEN }}
+        run: |
+          set -eu
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "no SIGNING_DISPATCH_TOKEN: os-xgs-npu-release-signing signs and publishes ${TAG} at its next look, within six hours"
+            exit 0
+          fi
+          gh workflow run sign.yml -R AbdelmonemAwad/os-xgs-npu-release-signing \
+            -f repository="${GITHUB_REPOSITORY#*/}" -f tag="${TAG}"
+          echo "os-xgs-npu-release-signing is signing ${TAG}; it publishes the release once its files are up"
